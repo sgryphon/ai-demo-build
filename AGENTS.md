@@ -1,11 +1,13 @@
-* Use modern networking and development.
-* Use IPv6-first design.
-* IPv6 addressing is effectively unlimited; use the standards.
-* Don't do it the old standard way; do it the modern, best practice way.
-* Put Bicep in infrastructure/ within each project or sample.
-* Follow Azure naming conventions, with deterministic uniquifiers where needed.
-* Tag all resources that support tags, including in demos.
-* Separate optional RG/network initialization from workload deployment.
-* Accept corporate-provided resource IDs and address allocations; don't assume subscription-level permissions.
-* Use CIDR functions for subnet calculations; use /64 for IPv6 subnets.
-* Support fresh deployment from the current model; use explicit migrations for transitions that require them.
+- Prefer current, supported Azure resource models and APIs; justify preview dependencies.
+- Use IPv6-first networking, CIDR functions, and /64 IPv6 subnets.
+- Put Bicep in infrastructure/ within each project or sample.
+- Number top-level templates; name module folders <template-name>-modules.
+- Keep modules one level deep; orchestrate component modules from the top level.
+- Follow CAF resource abbreviations and naming, with deterministic uniquifiers where needed.
+- Tag all supported resources, including demos; use lowercase keys and consistent values.
+- Separate optional foundation initialization (RG, networking, monitoring) from workload deployment.
+- Accept corporate-provided resource IDs and address allocations; don't assume subscription-level permissions.
+- Support fresh deployment from the current model; use explicit migrations where required.
+- Document direct deployment commands; add wrapper scripts only when they provide meaningful value.
+- Keep documentation concise: describe what is deployed and noteworthy constraints.
+- Format, build, and lint Bicep locally; don't access Azure without explicit approval.
