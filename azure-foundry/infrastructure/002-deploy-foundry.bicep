@@ -53,6 +53,12 @@ param foundryName string = toLower('aif-${purpose}-${environment}-${orgId}-${ins
 @maxLength(64)
 param projectName string = toLower('proj-${purpose}-${environment}-${instance}')
 
+@description('Application Insights resource name to connect to the Foundry account and project.')
+param applicationInsightsName string = toLower('appi-${purpose}-${environment}-${orgId}-${instance}')
+
+@description('Resource group containing the Application Insights resource.')
+param applicationInsightsResourceGroupName string = resourceGroup().name
+
 @description('Confidentiality classification tag. Align this value with the taxonomy used by your organization.')
 param confidentiality string = 'Unclassified'
 
@@ -72,7 +78,19 @@ module aiFoundry './002-deploy-foundry-modules/ai-foundry.bicep' = {
   params: {
     foundryName: foundryName
     projectName: projectName
+    applicationInsightsName: applicationInsightsName
+    applicationInsightsResourceGroupName: applicationInsightsResourceGroupName
     tags: tags
+  }
+}
+
+module monitorAccess './002-deploy-foundry-modules/monitor-access.bicep' = {
+  name: 'grant-foundry-project-monitor-access'
+  scope: resourceGroup(applicationInsightsResourceGroupName)
+  params: {
+    applicationInsightsName: applicationInsightsName
+    projectId: aiFoundry.outputs.projectId
+    projectPrincipalId: aiFoundry.outputs.projectPrincipalId
   }
 }
 

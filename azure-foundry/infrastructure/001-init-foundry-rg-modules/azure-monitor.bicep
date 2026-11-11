@@ -1,7 +1,7 @@
 /*
 Creates workspace-based Application Insights and its Log Analytics workspace.
-These are demo observability resources; the Foundry account/project do not
-require them and this module does not attach them automatically.
+These are demo observability resources. The Foundry workload deployment
+connects the Application Insights resource to the account and project.
 */
 
 @description('Workload or business-unit identifier.')

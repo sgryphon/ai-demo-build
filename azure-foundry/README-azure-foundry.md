@@ -1,8 +1,7 @@
 # Azure AI Foundry
 
-Repeatable Bicep deployment for the current Azure AI Foundry account/project
-model. It creates a Foundry account and one project without deploying models or
-adding networking and other optional workload components.
+Repeatable Bicep deployment of an Azure AI Foundry account and project with
+Azure Monitor integration for agent tracing.
 
 ## Prerequisites
 
@@ -10,6 +9,8 @@ adding networking and other optional workload components.
 - PowerShell 7 or later.
 - Access to a subscription and region where Azure AI Foundry is available.
 - Azure permissions to create the resources in the selected deployment mode.
+- Permission to create the monitoring role assignments when deploying the
+  Foundry workload.
 
 Sign in and, if useful, choose the subscription:
 
@@ -28,8 +29,7 @@ To initialise a Resource Group and Azure Monitor:
 az deployment sub create `
   --name "init-foundry-rg-$(Get-Date -Format 'yyyyMMddHHmmss')" `
   --location australiaeast `
-  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg.bicep `
-  --parameters purpose=Demo environment=Dev region=australiaeast instance=001
+  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg.bicep
 ```
 
 This creates the following Azure Resources (using the default settings):
@@ -51,25 +51,27 @@ Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
 az deployment group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name "deploy-foundry-$(Get-Date -Format 'yyyyMMddHHmmss')" `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
-  --parameters purpose=Demo environment=Dev instance=001
+  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep
 ```
 
 This creates the following Azure Resources (using the default settings):
 
-| Resource        | Default naming pattern     | Purpose                                                                    |
-| --------------- | -------------------------- | -------------------------------------------------------------------------- |
-| Foundry account | `aif-demo-dev-{orgId}-001` | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
-| Foundry project | `proj-demo-dev-001`        | Child project under the account                                            |
+| Resource                          | Default naming pattern               | Purpose                                                                    |
+| --------------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| Foundry account                   | `aif-demo-dev-{orgId}-001`           | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
+| Foundry project                   | `proj-demo-dev-001`                  | Child project under the account                                            |
+| Application Insights connections  | `aif-...-appinsights` and `appi-...` | Account- and project-scoped tracing connections                            |
+| Project identity role assignments | On Application Insights              | Log Analytics Reader and Privileged Monitoring Data Reader                 |
 
-You can also override parameters, for example:
+You can override parameters or use an existing Azure Monitor Application
+Insights resource, for example:
 
 ```powershell
 az deployment group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name "deploy-foundry-$(Get-Date -Format 'yyyyMMddHHmmss')" `
   --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
-  --parameters orgid=MyOrg purpose=MyDemo environment=Test instance=001
+  --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring
 ```
 
 ## Cleanup
@@ -80,6 +82,3 @@ resources:
 ```powershell
 az group delete --name rg-demo-foundry-dev-001 --yes --no-wait
 ```
-
-Replace the example name with the resource group name used in Phase 1. Do not
-delete a corporate-provided resource group.
