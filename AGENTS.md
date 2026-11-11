@@ -1,13 +1,14 @@
-- Prefer current, supported Azure resource models and APIs; justify preview dependencies.
+- Make demos runnable unchanged in different subscriptions: default orgId deterministically from the subscription ID and provide repeatable network allocations when needed; allow explicit overrides.
 - Use IPv6-first networking, CIDR functions, and /64 IPv6 subnets.
-- Put Bicep in infrastructure/ within each project or sample.
-- Number top-level templates; name module folders <template-name>-modules.
+- Put deployment assets in deployment/ within each project or sample.
+- Keep baseline/ as the current desired state for fresh deployments; put explicit, ordered transitions for existing environments in migrations/ (only when requested).
+- Use numbered stack folders under deployment/baseline/, each with main.bicep and sibling component modules.
 - Keep modules one level deep; orchestrate component modules from the top level.
-- Follow CAF resource abbreviations and naming, with deterministic uniquifiers where needed.
-- Tag all supported resources, including demos; use lowercase keys and consistent values.
 - Separate optional foundation initialization (RG, networking, monitoring) from workload deployment.
 - Accept corporate-provided resource IDs and address allocations; don't assume subscription-level permissions.
-- Support fresh deployment from the current model; use explicit migrations where required.
+- Follow CAF resource abbreviations and naming, with deterministic uniquifiers where needed.
+- Tag all supported resources, including demos; use lowercase keys and consistent values.
+- Prefer current, supported Azure resource models and APIs; justify preview dependencies.
 - Document direct deployment commands; add wrapper scripts only when they provide meaningful value.
 - Keep documentation concise: describe what is deployed and noteworthy constraints.
-- Format, build, and lint Bicep locally; don't access Azure without explicit approval.
+- Run standalone `bicep format`, `bicep build`, and `bicep lint` on changed Bicep files; don't access Azure without explicit approval.

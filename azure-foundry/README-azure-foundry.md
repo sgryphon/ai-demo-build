@@ -30,7 +30,7 @@ To initialise a Resource Group and Azure Monitor:
 az stack sub create `
   --name stack-demo-foundry-dev-001-init `
   --location australiaeast `
-  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg.bicep `
+  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg/main.bicep `
   --action-on-unmanage detachAll `
   --deny-settings-mode none `
   --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -55,7 +55,7 @@ Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name stack-demo-foundry-dev-001-workload `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
+  --template-file ./azure-foundry/infrastructure/002-deploy-foundry/main.bicep `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `
   --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -77,7 +77,7 @@ Insights resource, for example:
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name stack-mydemo-foundry-test-001-workload `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
+  --template-file ./azure-foundry/infrastructure/002-deploy-foundry/main.bicep `
   --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `
@@ -112,3 +112,19 @@ az stack sub delete `
 ```
 
 Deleting the demo resource group also deletes anything else placed in it.
+
+## Ideas: deployment
+
+- Break up into stacks 001, 002, 003, etc
+- Have deployments 20261112*, yyyymmdd*,etc (could add hhmm\_)
+- A deployment only replaces the stacks it has defined, run in numerical order.
+- Have pre-incremental-deployment and post-incremental-deployment scripts
+
+- A clean one-shot deployment just combines the latest version of each stack, in order
+- Has pre- and post- full deployment scripts
+
+- Define a store (storage account ?) for completed scripts.
+- Stores the completed incremental deployments
+- Incremental deployment runs the missing ones, one at a time.
+
+- Overkill for demo scripts ... demo scripts count as the first deployment, with all stacks.

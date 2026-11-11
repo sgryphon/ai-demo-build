@@ -5,7 +5,7 @@ Creates, idempotently via Azure Resource Manager:
 
 This uses the current `Microsoft.CognitiveServices` account/project model,
 not the legacy Azure Machine Learning Hub/Project model. The target resource
-group must already exist; create it with `001-init-foundry-rg.bicep` or use a
+group must already exist; create it with `001-init-foundry-rg/main.bicep` or use a
 corporate-provided resource group.
 
 Notes:
@@ -20,7 +20,7 @@ Example:
   az stack group create `
     --resource-group 'rg-demo-foundry-dev-001' `
     --name 'stack-demo-foundry-dev-001-workload' `
-    --template-file './azure-foundry/infrastructure/002-deploy-foundry.bicep' `
+    --template-file './azure-foundry/infrastructure/002-deploy-foundry/main.bicep' `
     --action-on-unmanage deleteResources `
     --deny-settings-mode none `
     --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -76,7 +76,7 @@ var tags = {
   confidentiality: toLower(confidentiality)
 }
 
-module aiFoundry './002-deploy-foundry-modules/ai-foundry.bicep' = {
+module aiFoundry './ai-foundry.bicep' = {
   name: 'deploy-ai-foundry'
   params: {
     foundryName: foundryName
@@ -87,7 +87,7 @@ module aiFoundry './002-deploy-foundry-modules/ai-foundry.bicep' = {
   }
 }
 
-module monitorAccess './002-deploy-foundry-modules/monitor-access.bicep' = {
+module monitorAccess './monitor-access.bicep' = {
   name: 'grant-foundry-project-monitor-access'
   scope: resourceGroup(applicationInsightsResourceGroupName)
   params: {

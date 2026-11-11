@@ -18,7 +18,7 @@ Example:
   az stack sub create `
     --name 'stack-demo-foundry-dev-001-init' `
     --location 'australiaeast' `
-    --template-file './azure-foundry/infrastructure/001-init-foundry-rg.bicep' `
+    --template-file './azure-foundry/infrastructure/001-init-foundry-rg/main.bicep' `
     --action-on-unmanage detachAll `
     --deny-settings-mode none `
     --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -72,7 +72,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   tags: tags
 }
 
-module azureMonitor './001-init-foundry-rg-modules/azure-monitor.bicep' = {
+module azureMonitor './azure-monitor.bicep' = {
   name: 'init-azure-monitor'
   scope: rg
   params: {
