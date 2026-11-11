@@ -5,12 +5,13 @@ Azure Monitor integration for agent tracing.
 
 ## Prerequisites
 
-- Azure CLI with Bicep support.
+- Azure CLI 2.61.0 or later with Bicep support.
 - PowerShell 7 or later.
 - Access to a subscription and region where Azure AI Foundry is available.
 - Azure permissions to create the resources in the selected deployment mode.
 - Permission to create the monitoring role assignments when deploying the
   Foundry workload.
+- Permission to manage deployment stacks at the selected scopes.
 
 Sign in and, if useful, choose the subscription:
 
@@ -26,10 +27,13 @@ Note: If you have already been provided a resource group, you can skip this step
 To initialise a Resource Group and Azure Monitor:
 
 ```powershell
-az deployment sub create `
-  --name "init-foundry-rg-$(Get-Date -Format 'yyyyMMddHHmmss')" `
+az stack sub create `
+  --name stack-demo-foundry-dev-001-init `
   --location australiaeast `
-  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg.bicep
+  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg.bicep `
+  --action-on-unmanage detachAll `
+  --deny-settings-mode none `
+  --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
 ```
 
 This creates the following Azure Resources (using the default settings):
@@ -48,10 +52,13 @@ Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
 ### Deploying the workload: Foundry account and project
 
 ```powershell
-az deployment group create `
+az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
-  --name "deploy-foundry-$(Get-Date -Format 'yyyyMMddHHmmss')" `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep
+  --name stack-demo-foundry-dev-001-workload `
+  --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
+  --action-on-unmanage deleteResources `
+  --deny-settings-mode none `
+  --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
 ```
 
 This creates the following Azure Resources (using the default settings):
@@ -67,18 +74,41 @@ You can override parameters or use an existing Azure Monitor Application
 Insights resource, for example:
 
 ```powershell
-az deployment group create `
+az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
-  --name "deploy-foundry-$(Get-Date -Format 'yyyyMMddHHmmss')" `
+  --name stack-mydemo-foundry-test-001-workload `
   --template-file ./azure-foundry/infrastructure/002-deploy-foundry.bicep `
-  --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring
+  --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring `
+  --action-on-unmanage deleteResources `
+  --deny-settings-mode none `
+  --tags env=test region=australiaeast criticality=low businessunit=mydemo confidentiality=unclassified
 ```
+
+## Stack lifecycle
+
+The init stack retains resources removed from its template (`detachAll`);
+the workload stack deletes removed resources but retains resource groups
+(`deleteResources`). Existing Application Insights resources remain outside
+workload ownership; its connections and role assignments belong to the workload.
 
 ## Cleanup
 
-For the default demo resource group created by Phase 1, remove the group and its
-resources:
+Delete the workload stack and its managed resources first. This retains the
+resource group and foundation resources:
 
 ```powershell
-az group delete --name rg-demo-foundry-dev-001 --yes --no-wait
+az stack group delete `
+  --resource-group rg-demo-foundry-dev-001 `
+  --name stack-demo-foundry-dev-001-workload `
+  --action-on-unmanage deleteResources
 ```
+
+For the demo foundation only, delete the init stack and its resource group:
+
+```powershell
+az stack sub delete `
+  --name stack-demo-foundry-dev-001-init `
+  --action-on-unmanage deleteAll
+```
+
+Deleting the demo resource group also deletes anything else placed in it.

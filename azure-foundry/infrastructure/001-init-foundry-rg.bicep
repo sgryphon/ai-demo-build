@@ -15,10 +15,13 @@ Notes:
   https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
 Example:
-  az deployment sub create `
-    --name "init-foundry-rg-$(Get-Date -Format 'yyyyMMddHHmmss')" `
+  az stack sub create `
+    --name 'stack-demo-foundry-dev-001-init' `
     --location 'australiaeast' `
-    --template-file './azure-foundry/infrastructure/001-init-foundry-rg.bicep'
+    --template-file './azure-foundry/infrastructure/001-init-foundry-rg.bicep' `
+    --action-on-unmanage detachAll `
+    --deny-settings-mode none `
+    --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
 */
 
 targetScope = 'subscription'

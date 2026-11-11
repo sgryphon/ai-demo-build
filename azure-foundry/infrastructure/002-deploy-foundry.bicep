@@ -17,10 +17,13 @@ Notes:
   https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
 Example:
-  az deployment group create `
+  az stack group create `
     --resource-group 'rg-demo-foundry-dev-001' `
-    --name "deploy-foundry-$(Get-Date -Format 'yyyyMMddHHmmss')" `
-    --template-file './azure-foundry/infrastructure/002-deploy-foundry.bicep'
+    --name 'stack-demo-foundry-dev-001-workload' `
+    --template-file './azure-foundry/infrastructure/002-deploy-foundry.bicep' `
+    --action-on-unmanage deleteResources `
+    --deny-settings-mode none `
+    --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
 */
 
 @description('Workload or business-unit identifier. Use a short name-safe value.')
