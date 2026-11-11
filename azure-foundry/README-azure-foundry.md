@@ -37,10 +37,13 @@ This creates the following Azure Resources (using the default settings):
 | Resource                | Default naming pattern      | Purpose                                     |
 | ----------------------- | --------------------------- | ------------------------------------------- |
 | Resource group          | `rg-demo-foundry-dev-001`   | Demo deployment boundary                    |
-| Log Analytics workspace | `law-demo-dev-{orgId}-001`  | Workspace backing demo Application Insights |
+| Log Analytics workspace | `log-demo-dev-{orgId}-001`  | Workspace backing demo Application Insights |
 | Application Insights    | `appi-demo-dev-{orgId}-001` | Optional observability foundation           |
 
 The default `orgId` is derived deterministically from the subscription ID.
+Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
+`businessunit`, and `confidentiality`. The default confidentiality value is
+`unclassified`; change it to match your organization's classification taxonomy.
 
 ### Deploying the workload: Foundry account and project
 
@@ -57,7 +60,7 @@ This creates the following Azure Resources (using the default settings):
 | Resource        | Default naming pattern     | Purpose                                                                    |
 | --------------- | -------------------------- | -------------------------------------------------------------------------- |
 | Foundry account | `aif-demo-dev-{orgId}-001` | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
-| Foundry project | `demo-dev-001-proj`        | Child project under the account                                            |
+| Foundry project | `proj-demo-dev-001`        | Child project under the account                                            |
 
 You can also override parameters, for example:
 

@@ -1,7 +1,7 @@
 /*
 Creates, idempotently via Azure Resource Manager:
   - Resource group `rg-demo-foundry-dev-001`
-  - Log Analytics workspace `law-demo-dev-<orgId>-001`
+  - Log Analytics workspace `log-demo-dev-<orgId>-001`
   - Workspace-based Application Insights `appi-demo-dev-<orgId>-001`
 
 The organization identifier is derived deterministically from the subscription
@@ -49,17 +49,18 @@ param orgId string = substring(uniqueString(subscription().subscriptionId), 0, 6
 @description('Override the default resource group name when required.')
 param resourceGroupName string = toLower('rg-${purpose}-foundry-${environment}-${instance}')
 
-@description('Data classification tag.')
-param dataClassification string = 'Non-business'
+@description('Confidentiality classification tag. Align this value with the taxonomy used by your organization.')
+param confidentiality string = 'Unclassified'
 
 @description('Criticality tag.')
-param criticality string = 'Low'
+param criticality string = 'low'
 
 var tags = {
-  DataClassification: dataClassification
-  Criticality: criticality
-  BusinessUnit: purpose
-  Env: environment
+  env: toLower(environment)
+  region: region
+  criticality: toLower(criticality)
+  businessunit: toLower(purpose)
+  confidentiality: toLower(confidentiality)
 }
 
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {

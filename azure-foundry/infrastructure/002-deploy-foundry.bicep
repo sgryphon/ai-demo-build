@@ -1,7 +1,7 @@
 /*
 Creates, idempotently via Azure Resource Manager:
   - Azure AI Foundry account `aif-demo-dev-<orgId>-001`
-  - Foundry project `demo-dev-001-proj`
+  - Foundry project `proj-demo-dev-001`
 
 This uses the current `Microsoft.CognitiveServices` account/project model,
 not the legacy Azure Machine Learning Hub/Project model. The target resource
@@ -51,19 +51,20 @@ param foundryName string = toLower('aif-${purpose}-${environment}-${orgId}-${ins
 @description('Override the default Foundry project name.')
 @minLength(2)
 @maxLength(64)
-param projectName string = toLower('${purpose}-${environment}-${instance}-proj')
+param projectName string = toLower('proj-${purpose}-${environment}-${instance}')
 
-@description('Data classification tag.')
-param dataClassification string = 'Non-business'
+@description('Confidentiality classification tag. Align this value with the taxonomy used by your organization.')
+param confidentiality string = 'Unclassified'
 
 @description('Criticality tag.')
-param criticality string = 'Low'
+param criticality string = 'low'
 
 var tags = {
-  DataClassification: dataClassification
-  Criticality: criticality
-  BusinessUnit: purpose
-  Env: environment
+  env: toLower(environment)
+  region: resourceGroup().location
+  criticality: toLower(criticality)
+  businessunit: toLower(purpose)
+  confidentiality: toLower(confidentiality)
 }
 
 module aiFoundry './002-deploy-foundry-modules/ai-foundry.bicep' = {

@@ -22,7 +22,7 @@ param region string
 @description('Tags applied to all resources that support tags.')
 param tags object
 
-var logAnalyticsWorkspaceName = toLower('law-${purpose}-${environment}-${orgId}-${instance}')
+var logAnalyticsWorkspaceName = toLower('log-${purpose}-${environment}-${orgId}-${instance}')
 var applicationInsightsName = toLower('appi-${purpose}-${environment}-${orgId}-${instance}')
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
