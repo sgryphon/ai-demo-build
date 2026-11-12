@@ -9,14 +9,12 @@ Azure Monitor integration for agent tracing.
 - PowerShell 7 or later.
 - Access to a subscription and region where Azure AI Foundry is available.
 - Azure permissions to create the resources in the selected deployment mode.
-- Permission to create the monitoring role assignments when deploying the
-  Foundry workload.
 - Permission to manage deployment stacks at the selected scopes.
 
 Sign in and, if useful, choose the subscription:
 
 ```powershell
-az login
+az login --tenant <tenant-id>
 az account set --subscription <subscription-id>
 ```
 
@@ -30,7 +28,7 @@ To initialise a Resource Group and Azure Monitor:
 az stack sub create `
   --name stack-demo-foundry-dev-001-init `
   --location australiaeast `
-  --template-file ./azure-foundry/infrastructure/001-init-foundry-rg/main.bicep `
+  --template-file ./azure-foundry/baseline/001-init-foundry-rg/main.bicep `
   --action-on-unmanage detachAll `
   --deny-settings-mode none `
   --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -55,7 +53,7 @@ Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name stack-demo-foundry-dev-001-workload `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry/main.bicep `
+  --template-file ./azure-foundry/baseline/002-deploy-foundry/main.bicep `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `
   --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -68,7 +66,6 @@ This creates the following Azure Resources (using the default settings):
 | Foundry account                   | `aif-demo-dev-{orgId}-001`           | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
 | Foundry project                   | `proj-demo-dev-001`                  | Child project under the account                                            |
 | Application Insights connections  | `aif-...-appinsights` and `appi-...` | Account- and project-scoped tracing connections                            |
-| Project identity role assignments | On Application Insights              | Log Analytics Reader and Privileged Monitoring Data Reader                 |
 
 You can override parameters or use an existing Azure Monitor Application
 Insights resource, for example:
@@ -77,7 +74,7 @@ Insights resource, for example:
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name stack-mydemo-foundry-test-001-workload `
-  --template-file ./azure-foundry/infrastructure/002-deploy-foundry/main.bicep `
+  --template-file ./azure-foundry/baseline/002-deploy-foundry/main.bicep `
   --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `

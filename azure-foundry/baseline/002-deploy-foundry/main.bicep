@@ -87,16 +87,6 @@ module aiFoundry './ai-foundry.bicep' = {
   }
 }
 
-module monitorAccess './monitor-access.bicep' = {
-  name: 'grant-foundry-project-monitor-access'
-  scope: resourceGroup(applicationInsightsResourceGroupName)
-  params: {
-    applicationInsightsName: applicationInsightsName
-    projectId: aiFoundry.outputs.projectId
-    projectPrincipalId: aiFoundry.outputs.projectPrincipalId
-  }
-}
-
 output foundryId string = aiFoundry.outputs.foundryId
 output foundryName string = aiFoundry.outputs.foundryName
 output projectId string = aiFoundry.outputs.projectId

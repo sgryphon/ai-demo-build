@@ -1,0 +1,257 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.49.2.45890",
+      "templateHash": "15719933922302532950"
+    }
+  },
+  "parameters": {
+    "purpose": {
+      "type": "string",
+      "defaultValue": "Demo",
+      "minLength": 1,
+      "maxLength": 12,
+      "metadata": {
+        "description": "Workload or business-unit identifier. Use a short name-safe value."
+      }
+    },
+    "environment": {
+      "type": "string",
+      "defaultValue": "Dev",
+      "minLength": 1,
+      "maxLength": 8,
+      "metadata": {
+        "description": "Environment tag and name component."
+      }
+    },
+    "region": {
+      "type": "string",
+      "defaultValue": "australiaeast",
+      "metadata": {
+        "description": "Azure region for the resource group and Azure Monitor resources."
+      }
+    },
+    "instance": {
+      "type": "string",
+      "defaultValue": "001",
+      "minLength": 1,
+      "maxLength": 8,
+      "metadata": {
+        "description": "Instance suffix for resource names."
+      }
+    },
+    "orgId": {
+      "type": "string",
+      "defaultValue": "[substring(uniqueString(subscription().subscriptionId), 0, 6)]",
+      "minLength": 1,
+      "maxLength": 6,
+      "metadata": {
+        "description": "Organization identifier for globally unique names. Defaults deterministically from the subscription ID."
+      }
+    },
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "[toLower(format('rg-{0}-foundry-{1}-{2}', parameters('purpose'), parameters('environment'), parameters('instance')))]",
+      "metadata": {
+        "description": "Override the default resource group name when required."
+      }
+    },
+    "confidentiality": {
+      "type": "string",
+      "defaultValue": "Unclassified",
+      "metadata": {
+        "description": "Confidentiality classification tag. Align this value with the taxonomy used by your organization."
+      }
+    },
+    "criticality": {
+      "type": "string",
+      "defaultValue": "low",
+      "metadata": {
+        "description": "Criticality tag."
+      }
+    }
+  },
+  "variables": {
+    "tags": {
+      "env": "[toLower(parameters('environment'))]",
+      "region": "[parameters('region')]",
+      "criticality": "[toLower(parameters('criticality'))]",
+      "businessunit": "[toLower(parameters('purpose'))]",
+      "confidentiality": "[toLower(parameters('confidentiality'))]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('resourceGroupName')]",
+      "location": "[parameters('region')]",
+      "tags": "[variables('tags')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "init-azure-monitor",
+      "resourceGroup": "[parameters('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "purpose": {
+            "value": "[parameters('purpose')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "instance": {
+            "value": "[parameters('instance')]"
+          },
+          "orgId": {
+            "value": "[parameters('orgId')]"
+          },
+          "region": {
+            "value": "[parameters('region')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.49.2.45890",
+              "templateHash": "17211020853762581404"
+            }
+          },
+          "parameters": {
+            "purpose": {
+              "type": "string",
+              "metadata": {
+                "description": "Workload or business-unit identifier."
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "Environment name component."
+              }
+            },
+            "instance": {
+              "type": "string",
+              "metadata": {
+                "description": "Instance suffix for resource names."
+              }
+            },
+            "orgId": {
+              "type": "string",
+              "metadata": {
+                "description": "Organization identifier derived deterministically from the subscription ID."
+              }
+            },
+            "region": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for the monitor resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Tags applied to all resources that support tags."
+              }
+            }
+          },
+          "variables": {
+            "logAnalyticsWorkspaceName": "[toLower(format('log-{0}-{1}-{2}-{3}', parameters('purpose'), parameters('environment'), parameters('orgId'), parameters('instance')))]",
+            "applicationInsightsName": "[toLower(format('appi-{0}-{1}-{2}-{3}', parameters('purpose'), parameters('environment'), parameters('orgId'), parameters('instance')))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2023-09-01",
+              "name": "[variables('logAnalyticsWorkspaceName')]",
+              "location": "[parameters('region')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "retentionInDays": 30,
+                "sku": {
+                  "name": "PerGB2018"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[variables('applicationInsightsName')]",
+              "location": "[parameters('region')]",
+              "kind": "web",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "Application_Type": "web",
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "value": "[variables('logAnalyticsWorkspaceName')]"
+            },
+            "applicationInsightsId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+            },
+            "applicationInsightsName": {
+              "type": "string",
+              "value": "[variables('applicationInsightsName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[parameters('resourceGroupName')]"
+    },
+    "resourceGroupId": {
+      "type": "string",
+      "value": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'init-azure-monitor'), '2025-04-01').outputs.logAnalyticsWorkspaceId.value]"
+    },
+    "logAnalyticsWorkspaceName": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'init-azure-monitor'), '2025-04-01').outputs.logAnalyticsWorkspaceName.value]"
+    },
+    "applicationInsightsId": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'init-azure-monitor'), '2025-04-01').outputs.applicationInsightsId.value]"
+    },
+    "applicationInsightsName": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'init-azure-monitor'), '2025-04-01').outputs.applicationInsightsName.value]"
+    }
+  }
+}
