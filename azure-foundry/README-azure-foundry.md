@@ -20,9 +20,9 @@ az account set --subscription <subscription-id>
 
 ## Initialise the resource group
 
-Note: If you have already been provided a resource group, you can skip this step and go straight to **Deploying the workload**. This avoids requiring subscription-level permissions.
+Note: If you have already been provided a resource group, you can skip this step and go straight to **Deploying shared observability**. This avoids requiring subscription-level permissions.
 
-To initialise a Resource Group and Azure Monitor:
+To initialise a Resource Group:
 
 ```powershell
 az stack sub create `
@@ -36,24 +36,24 @@ az stack sub create `
 
 This creates the following Azure Resources (using the default settings):
 
-| Resource                | Default naming pattern      | Purpose                                     |
-| ----------------------- | --------------------------- | ------------------------------------------- |
-| Resource group          | `rg-demo-foundry-dev-001`   | Demo deployment boundary                    |
-| Log Analytics workspace | `log-demo-dev-{orgId}-001`  | Workspace backing demo Application Insights |
-| Application Insights    | `appi-demo-dev-{orgId}-001` | Optional observability foundation           |
+| Resource       | Default naming pattern    | Purpose            |
+| -------------- | ------------------------- | ------------------ |
+| Resource group | `rg-demo-foundry-dev-001` | Demo deployment RG |
 
 The default `orgId` is derived deterministically from the subscription ID.
-Both phases apply the lowercase tag keys `env`, `region`, `criticality`,
+All stacks apply the lowercase tag keys `env`, `region`, `criticality`,
 `businessunit`, and `confidentiality`. The default confidentiality value is
 `unclassified`; change it to match your organization's classification taxonomy.
 
-### Deploying the workload: Foundry account and project
+## Deploying shared services: Azure Monitor
+
+Deploy the shared Azure Monitor resources within the resource group:
 
 ```powershell
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
-  --name stack-demo-foundry-dev-001-workload `
-  --template-file ./azure-foundry/baseline/002-deploy-foundry/main.bicep `
+  --name stack-demo-foundry-dev-001-shared `
+  --template-file ./azure-foundry/baseline/002-deploy-shared/main.bicep `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `
   --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
@@ -61,11 +61,30 @@ az stack group create `
 
 This creates the following Azure Resources (using the default settings):
 
-| Resource                          | Default naming pattern               | Purpose                                                                    |
-| --------------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
-| Foundry account                   | `aif-demo-dev-{orgId}-001`           | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
-| Foundry project                   | `proj-demo-dev-001`                  | Child project under the account                                            |
-| Application Insights connections  | `aif-...-appinsights` and `appi-...` | Account- and project-scoped tracing connections                            |
+| Resource                | Default naming pattern      | Purpose                                |
+| ----------------------- | --------------------------- | -------------------------------------- |
+| Log Analytics workspace | `log-demo-dev-{orgId}-001`  | Workspace backing Application Insights |
+| Application Insights    | `appi-demo-dev-{orgId}-001` | Observability foundation for workloads |
+
+## Deploying the workload: Foundry account and project
+
+```powershell
+az stack group create `
+  --resource-group rg-demo-foundry-dev-001 `
+  --name stack-demo-foundry-dev-001-workload `
+  --template-file ./azure-foundry/baseline/003-deploy-foundry/main.bicep `
+  --action-on-unmanage deleteResources `
+  --deny-settings-mode none `
+  --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
+```
+
+This creates the following Azure Resources (using the default settings):
+
+| Resource                         | Default naming pattern               | Purpose                                                                    |
+| -------------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| Foundry account                  | `aif-demo-dev-{orgId}-001`           | Current `Microsoft.CognitiveServices/accounts` resource, kind `AIServices` |
+| Foundry project                  | `proj-demo-dev-001`                  | Child project under the account                                            |
+| Application Insights connections | `aif-...-appinsights` and `appi-...` | Account- and project-scoped tracing connections                            |
 
 You can override parameters or use an existing Azure Monitor Application
 Insights resource, for example:
@@ -74,7 +93,7 @@ Insights resource, for example:
 az stack group create `
   --resource-group rg-demo-foundry-dev-001 `
   --name stack-mydemo-foundry-test-001-workload `
-  --template-file ./azure-foundry/baseline/002-deploy-foundry/main.bicep `
+  --template-file ./azure-foundry/baseline/003-deploy-foundry/main.bicep `
   --parameters orgId=MyOrg purpose=MyDemo environment=Test instance=001 applicationInsightsName=appi-existing applicationInsightsResourceGroupName=rg-monitoring `
   --action-on-unmanage deleteResources `
   --deny-settings-mode none `
@@ -84,14 +103,16 @@ az stack group create `
 ## Stack lifecycle
 
 The init stack retains resources removed from its template (`detachAll`);
-the workload stack deletes removed resources but retains resource groups
-(`deleteResources`). Existing Application Insights resources remain outside
-workload ownership; its connections and role assignments belong to the workload.
+the shared and workload stacks delete removed resources but retain resource groups
+(`deleteResources`). Application Insights and connections belong to the shared and workload stacks respectively.
 
 ## Cleanup
 
-Delete the workload stack and its managed resources first. This retains the
-resource group and foundation resources:
+If you want to delete everything, just skip to the last step.
+
+Otherwise you can delete stacks individually.
+
+Delete the workload stack and its managed resources first:
 
 ```powershell
 az stack group delete `
@@ -100,7 +121,16 @@ az stack group delete `
   --action-on-unmanage deleteResources
 ```
 
-For the demo foundation only, delete the init stack and its resource group:
+Then delete the shared stack:
+
+```powershell
+az stack group delete `
+  --resource-group rg-demo-foundry-dev-001 `
+  --name stack-demo-foundry-dev-001-shared `
+  --action-on-unmanage deleteResources
+```
+
+Finally, delete the init stack and resource group:
 
 ```powershell
 az stack sub delete `

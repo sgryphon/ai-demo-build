@@ -8,6 +8,9 @@ not the legacy Azure Machine Learning Hub/Project model. The target resource
 group must already exist; create it with `001-init-foundry-rg/main.bicep` or use a
 corporate-provided resource group.
 
+The Application Insights resource should be deployed via `002-deploy-shared`
+before deploying this workload stack.
+
 Notes:
   Running this requires Azure CLI and an authenticated subscription context.
   The organization identifier is derived deterministically from the
@@ -20,7 +23,7 @@ Example:
   az stack group create `
     --resource-group 'rg-demo-foundry-dev-001' `
     --name 'stack-demo-foundry-dev-001-workload' `
-    --template-file './azure-foundry/infrastructure/002-deploy-foundry/main.bicep' `
+    --template-file './azure-foundry/baseline/003-deploy-foundry/main.bicep' `
     --action-on-unmanage deleteResources `
     --deny-settings-mode none `
     --tags env=dev region=australiaeast criticality=low businessunit=demo confidentiality=unclassified
