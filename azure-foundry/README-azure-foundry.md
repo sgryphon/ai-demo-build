@@ -130,7 +130,7 @@ az stack group delete `
   --action-on-unmanage deleteResources
 ```
 
-Finally, delete the init stack and resource group:
+Finally, delete the init stack and resource group (this also deletes anything else that has not already been deleted):
 
 ```powershell
 az stack sub delete `
@@ -138,7 +138,44 @@ az stack sub delete `
   --action-on-unmanage deleteAll
 ```
 
-Deleting the demo resource group also deletes anything else placed in it.
+The AI Foundry will soft delete, so you need to purge if you want to re-run:
+
+```
+az cognitiveservices account purge `
+  --resource-group rg-demo-foundry-dev-001 `
+  --name aif-demo-dev-buf5ue-001 `
+  --location australiaeast
+```
+
+## Issues
+
+While you may have Contributor role, e.g. in the subscription to create a Foundry resource, that doesn't mean you can actually use it.
+
+e.g. When you try to access tools like Agents, you get an error:
+
+"You don't have permission to build agents in this project.
+To get access, please ask your administrator to assign you the Foundry User role for the resource:
+proj-default"
+
+You can modify or even delete the Foundry resource, but to actually use it you need admin permissions (that you may not have) to assign roles.
+
+Try getting your training subscription administrator to assign the role as the subscription level:
+
+```
+az role assignment create `
+  --role "Foundry User" `
+  --assignee "<your-user-id>" `
+  --scope "/subscriptions/419ddfc4-e365-4b55-9364-eb45b8f256b1"
+```
+
+## Notes
+
+In Azure Portal, when creating Foundry:
+
+- Can link to Key Vault
+- Can link to App Insights
+- Can set inbound and outbound networking
+- Can set User-assigned identity (or System-assigned)
 
 ## Ideas: deployment
 
