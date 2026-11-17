@@ -6,6 +6,8 @@ They need a deployed model, but you can use 'model-router' as a default, to auto
 
 If Azure commands don't work, make sure you have the latest CLI via `winget install --id Microsoft.AzureCLI`.
 
+Based on: https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html
+
 ## Prerequisites
 
 - Azure subscription with Foundry project deployed, see `/azure-foundry`
@@ -47,3 +49,27 @@ Create an agent, in the Foundry:
 ```powershell
 python create_agent.py
 ```
+
+Add file search (with a default file):
+
+```powershell
+python configure_file_search.py
+```
+
+Add code interpreter (with a default file):
+
+```powershell
+python configure_code_interpreter.py
+```
+
+## Manually test the agent
+
+Use the Foundry Portal, or the VS Code Foundry Toolkit, to view and test your agent in the Playground.
+
+e.g. "What's the policy for password resets?"
+
+or "Can you analyze the system performance data and tell me if there are any concerning trends?"
+
+or "Create a chart showing CPU usage over time from the performance data"
+
+## Demo code to access the agent
