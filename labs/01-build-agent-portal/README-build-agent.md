@@ -6,6 +6,14 @@ They need a deployed model, but you can use 'model-router' as a default, to auto
 
 If Azure commands don't work, make sure you have the latest CLI via `winget install --id Microsoft.AzureCLI`.
 
+## Prerequisites
+
+- Azure subscription with Foundry project deployed, see `/azure-foundry`
+- Python virtual environment `.venv`
+- Foundry SDK: `pip install -r requirements.txt`
+- `.env` file with PROJECT_ENDPOINT and AGENT_NAME
+- Azure CLI authenticated: `az login`
+
 ## Setup environment
 
 - Get the endpoint for the first Project of the first Foundry in the resource group:
@@ -32,7 +40,9 @@ pip install -r requirements.txt
 
 ## Agent creation
 
-(Check: do we need `az login`)
+(TODO: Check: do we need `az login`)
+
+Create an agent, in the Foundry:
 
 ```powershell
 python create_agent.py

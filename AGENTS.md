@@ -3,6 +3,7 @@
 - Make demos runnable unchanged in different subscriptions: default orgId deterministically from the subscription ID and provide repeatable network allocations when needed; allow explicit overrides.
 - Document direct deployment commands; add wrapper scripts only when they provide meaningful value.
 - Keep documentation concise: describe what is deployed and noteworthy constraints.
+- Don't guess at APIs, because development moves fast; check documentation to verify.
 - Don't add bonus features without explicit request; stick to what's asked.
 - When asked a question, answer the question; don't make changes.
 - If something is unclear, ask to clarify; don't guess.
