@@ -11,13 +11,13 @@ Prerequisites:
 
 Usage:
   python create_agent.py [--agent-name <name>] [--model <model>] [--description <desc>]
-                         [--replace | --upgrade]
+                         [--update]
 
 Examples:
   python create_agent.py
   python create_agent.py --agent-name "my-agent"
-  python create_agent.py --model "gpt-6-astra" --replace
-  python create_agent.py --upgrade
+  python create_agent.py --update
+  python create_agent.py --model "gpt-6-astra" --update
 """
 
 import argparse
@@ -31,6 +31,9 @@ from azure.ai.projects.models import PromptAgentDefinition
 
 # Load environment variables from .env file
 load_dotenv()
+
+DEFAULT_MODEL = "model-router"
+DEFAULT_SYSTEM_PROMPT_FILE = "data/instructions.md"
 
 
 def agent_exists(
@@ -53,46 +56,36 @@ def get_agent(
     return client.agents.get(agent_name)
 
 
-def update_agent_definition(
+def update_agent(
     client: AIProjectClient,
     agent_name: str,
-    model: str,
-    system_prompt: str,
+    system_prompt: str | None = None,
+    model: str | None = None,
+    description: str | None = None,
 ):
-    """Update an existing agent's definition (--force)."""
-    agent = client.agents.update(
+    """Create a new version from the latest one, patching only the given changes.
+
+    Agent versions are immutable, so the SDK has no in-place update.
+    Existing settings (tools, temperature, metadata, etc.) are preserved.
+    """
+    latest_version = client.agents.get(agent_name).versions.latest
+    definition = latest_version.definition
+
+    if system_prompt is not None:
+        definition.instructions = system_prompt
+    if model is not None:
+        definition.model = model
+
+    agent = client.agents.create_version(
         agent_name=agent_name,
-        definition=PromptAgentDefinition(
-            model=model,
-            instructions=system_prompt,
+        definition=definition,
+        description=(
+            description if description is not None else latest_version.description
         ),
+        metadata=latest_version.metadata,
     )
 
     print(f"✓ Agent updated successfully")
-    print(f"  Name: {agent.name}")
-    print(f"  ID: {agent.id}")
-    print(f"  Version: {agent.version}")
-    print(f"  Model: {agent.definition.model}")
-
-    return agent
-
-
-def create_new_version(
-    client: AIProjectClient,
-    agent_name: str,
-    model: str,
-    system_prompt: str,
-):
-    """Create a new version of an agent (--new-version)."""
-    agent = client.agents.create_version(
-        agent_name=agent_name,
-        definition=PromptAgentDefinition(
-            model=model,
-            instructions=system_prompt,
-        ),
-    )
-
-    print(f"✓ New version created successfully")
     print(f"  Name: {agent.name}")
     print(f"  ID: {agent.id}")
     print(f"  Version: {agent.version}")
@@ -106,6 +99,7 @@ def create_agent(
     agent_name: str,
     model: str,
     system_prompt: str,
+    description: str = "",
 ):
     """Create a new prompt agent in the Foundry project."""
     agent = client.agents.create_version(
@@ -114,6 +108,7 @@ def create_agent(
             model=model,
             instructions=system_prompt,
         ),
+        description=description,
     )
 
     print(f"✓ Agent created successfully")
@@ -137,8 +132,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="model-router",
-        help="Model to use (default: model-router)",
+        help=f"Model to use (default: {DEFAULT_MODEL} when creating; "
+        "unchanged when updating)",
     )
     parser.add_argument(
         "--description",
@@ -153,40 +148,41 @@ def main():
     parser.add_argument(
         "--system-prompt-file",
         type=str,
-        default="data/instructions.md",
-        help="Path to system prompt file (default: data/instructions.md)",
+        help=(
+            "Path to system prompt file (default on create: "
+            f"{DEFAULT_SYSTEM_PROMPT_FILE}; on update, only used when explicitly passed)"
+        ),
     )
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--replace",
+    parser.add_argument(
+        "--update",
         action="store_true",
-        help="Overwrite existing agent definition in-place (requires agent to exist)",
-    )
-    group.add_argument(
-        "--upgrade",
-        action="store_true",
-        help="Create a new version of an existing agent (keeps version history)",
+        help="Create a new version of an existing agent from its latest version, "
+        "preserving existing settings (keeps version history)",
     )
 
     args = parser.parse_args()
 
     agent_name = args.agent_name or os.getenv("AGENT_NAME")
-    model = args.model
     project_endpoint = os.getenv("PROJECT_ENDPOINT")
 
-    # Load system prompt: CLI arg overrides file
-    if args.system_prompt:
-        system_prompt = args.system_prompt
-    else:
-        try:
-            with open(args.system_prompt_file, 'r') as f:
-                system_prompt = f.read()
-        except FileNotFoundError:
-            raise ValueError(
-                f"System prompt file not found: {args.system_prompt_file}. "
-                "Provide --system-prompt or --system-prompt-file."
-            )
+    # On update, use instructions only when explicitly supplied. Creation falls
+    # back to the default instructions file.
+    system_prompt = args.system_prompt
+    if system_prompt is None:
+        system_prompt_file = args.system_prompt_file
+        if system_prompt_file is None and not args.update:
+            system_prompt_file = DEFAULT_SYSTEM_PROMPT_FILE
+
+        if system_prompt_file is not None:
+            try:
+                with open(system_prompt_file, 'r') as f:
+                    system_prompt = f.read()
+            except FileNotFoundError:
+                raise ValueError(
+                    f"System prompt file not found: {system_prompt_file}. "
+                    "Provide --system-prompt or --system-prompt-file."
+                )
 
     if not agent_name:
         raise ValueError(
@@ -207,43 +203,32 @@ def main():
     try:
         exists = agent_exists(client, agent_name)
 
-        if exists and not args.replace and not args.upgrade:
+        if args.update:
+            if not exists:
+                raise ValueError(
+                    f"Agent '{agent_name}' does not exist. "
+                )
+            update_agent(
+                client=client,
+                agent_name=agent_name,
+                system_prompt=system_prompt,
+                model=args.model,
+                description=args.description,
+            )
+
+        elif exists:
             print(f"Agent '{agent_name}' already exists.")
-            print(f"Use --replace to overwrite or --upgrade to create a new version.")
-            return
-
-        if args.replace:
-            if not exists:
-                raise ValueError(
-                    f"Agent '{agent_name}' does not exist. "
-                    "Use default behavior (without --replace or --upgrade) to create it."
-                )
-            update_agent_definition(
-                client=client,
-                agent_name=agent_name,
-                model=model,
-                system_prompt=system_prompt,
-            )
-
-        elif args.upgrade:
-            if not exists:
-                raise ValueError(
-                    f"Agent '{agent_name}' does not exist. "
-                    "Use default behavior (without --replace or --upgrade) to create it."
-                )
-            create_new_version(
-                client=client,
-                agent_name=agent_name,
-                model=model,
-                system_prompt=system_prompt,
-            )
+            print(f"Use --update to create a new version.")
 
         else:
             create_agent(
                 client=client,
                 agent_name=agent_name,
-                model=model,
+                model=args.model if args.model is not None else DEFAULT_MODEL,
                 system_prompt=system_prompt,
+                description=(
+                    args.description if args.description is not None else ""
+                ),
             )
 
     except Exception as e:
