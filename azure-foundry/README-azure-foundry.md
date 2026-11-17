@@ -159,7 +159,7 @@ proj-default"
 
 You can modify or even delete the Foundry resource, but to actually use it you need admin permissions (that you may not have) to assign roles.
 
-Try getting your training subscription administrator to assign the role as the subscription level:
+Try getting your training subscription administrator to assign at least the 'Foundry User' role as the subscription level (or preferably a higher level role such as 'Foundry Owner'). The subscription level permission will allow you to access the Foundry you create.
 
 ```
 az role assignment create `
