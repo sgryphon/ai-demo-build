@@ -60,6 +60,8 @@ def configure_file_search(
 
     openai_client = client.get_openai_client()
     current_agent = client.agents.get(agent_name)
+    latest_version = current_agent.versions.latest
+    definition = latest_version.definition
 
     # Check if file search already exists
     existing_file_search_tool = get_file_search_tool(current_agent)
@@ -75,16 +77,12 @@ def configure_file_search(
         openai_client.vector_stores.delete(existing_vector_store_id)
         print(f"  Deleted old vector store: {existing_vector_store_id}")
 
-    # Create new vector store
-    vector_store = openai_client.vector_stores.create(name=f"{agent_name}-files")
-    print(f"✓ Vector store created: {vector_store.id}")
-
-    # Save a new agent version, reusing the tool found by the initial check.
-    latest_version = current_agent.versions.latest
-    definition = latest_version.definition
-    if existing_file_search_tool:
+        vector_store = openai_client.vector_stores.create(name=f"{agent_name}-files")
+        print(f"✓ Vector store created: {vector_store.id}")
         existing_file_search_tool.vector_store_ids = [vector_store.id]
     else:
+        vector_store = openai_client.vector_stores.create(name=f"{agent_name}-files")
+        print(f"✓ Vector store created: {vector_store.id}")
         definition.tools = (definition.tools or []) + [
             FileSearchTool(vector_store_ids=[vector_store.id])
         ]
