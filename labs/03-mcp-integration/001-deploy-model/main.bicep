@@ -64,9 +64,18 @@ param instance string = '001'
 @maxLength(6)
 param orgId string = substring(uniqueString(subscription().subscriptionId), 0, 6)
 
+@allowed([
+  'AI21 Labs'
+  'Cohere'
+  'Core42'
+  'DeepSeek'
+  'xAI'
+  'Meta'
+  'Microsoft'
+  'Mistral AI'
+  'OpenAI'
+])
 @description('Model format (e.g., OpenAI).')
-@minLength(1)
-@maxLength(64)
 param modelFormat string = 'OpenAI'
 
 @description('Model identifier or name to deploy (e.g., gpt-6.1-terra, gpt-6-astra, claude-opus-5.5).')
@@ -79,14 +88,22 @@ param modelName string = 'gpt-6.1-terra'
 @maxLength(64)
 param modelVersion string = '2026-10-26'
 
+@allowed([
+  'GlobalStandard'
+  'DataZoneStandard'
+  'Standard'
+  'GlobalProvisioned'
+  'Provisioned'
+])
 @description('SKU (e.g., GlobalStandard).')
-@minLength(1)
-@maxLength(64)
 param skuName string = 'GlobalStandard'
 
 @description('Capacity (quota) units for the model deployment. 1 quota unit is 1,000 tokens/minute.')
 @minValue(1)
 param skuCapacity int = 150
+
+@description('Content filter policy name')
+param contentFilterPolicyName string = 'Microsoft.DefaultV2'
 
 @description('Deployment name override. Defaults to <modelName>-<environment>-<instance>.')
 @minLength(2)
@@ -129,6 +146,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
       name: modelName
       version: modelVersion
     }
+    raiPolicyName: contentFilterPolicyName == null ? 'Microsoft.Nill' : contentFilterPolicyName
   }
   tags: tags
 }
