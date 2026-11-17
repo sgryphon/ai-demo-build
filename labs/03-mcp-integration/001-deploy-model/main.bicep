@@ -84,9 +84,9 @@ param modelVersion string = '2026-10-26'
 @maxLength(64)
 param skuName string = 'GlobalStandard'
 
-@description('Capacity (quota) units for the model deployment.')
+@description('Capacity (quota) units for the model deployment. 1 quota unit is 1,000 tokens/minute.')
 @minValue(1)
-param skuCapacity int = 50
+param skuCapacity int = 150
 
 @description('Deployment name override. Defaults to <modelName>-<environment>-<instance>.')
 @minLength(2)
