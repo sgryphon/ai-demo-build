@@ -1,8 +1,11 @@
 # Azure Foundry labs
 
+Based on Microsoft Labs (code copied from them), but with infrastructure-as-code deployments for all components (no clicking in the UI to create stuff).
+
 - `01-build-agent` Create an agent (via scripts), and use code to access it, https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html
 - `02-custom-function-agent` https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/02-agent-custom-tools.html
-- `03-mcp-integration` Connect MCP tools to Foundry Agents, https://go.microsoft.com/fwlink/?linkid=2353400
+- `03-mcp-integration` Connect MCP tools to Foundry Agents, https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/03-mcp-integration.html
+- `04-foundry-iq-agent` https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/04-integrate-agent-with-foundry-iq.html
 
 TODO:
 

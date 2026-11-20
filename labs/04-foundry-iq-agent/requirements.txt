@@ -1,0 +1,10 @@
+azure-ai-projects>=2.3.0
+azure-identity>=1.15.0
+# Foundry IQ knowledge sources/bases are only in the preview Search SDK.
+azure-search-documents>=12.2.0b1
+azure-storage-blob>=12.20.0
+python-dotenv>=1.0.0
+# openai 3.x replaced httpx with httpx2, which breaks azure-ai-projects'
+# `import httpx`. Pinned until azure-ai-projects supports openai 3.
+openai<3
+black>=26.10.1
